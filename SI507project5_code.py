@@ -70,7 +70,7 @@ def get_from_cache(identifier,dictionary):
     else:
         data = None #Identifier not in dictionary
     return data #return data from dictionary['identifier']['values']
-print(get_from_cache('HTTPS://API.TUMBLR.COM/V2/BLOG/UXDESIGNRESOURCE.TUMBLR.COM/POSTS?LIMIT_20_OFFSET_3',CACHE_DICTION))
+
 def set_in_data_cache(identifier, data, expire_in_days):
     identifier = identifier.upper()
     CACHE_DICTION[identifier]={
@@ -139,22 +139,6 @@ def create_request_identifier(url, params_diction):
     params_str = "_".join([str(e) for l in sorted_params for e in l]) # Make the list of tuples into a flat list using a complex list comprehension
     total_ident = url + "?" + params_str
     return total_ident.upper() # Creating the identifier
-
-# 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = tokens
-
-# Save the credentials so that can use it again
-# try:
-# 	f = open("cred.txt",'r')
-# 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = json.loads(f.read())
-# 	f.close()
-# except:
-# 	tokens = get_tokens()
-# 	f = open("cred.txt",'w')
-# 	f.write(json.dumps(tokens))
-# 	f.close()
-# 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = tokens
-#create an oauth object using the credentials
-
 
 def get_posts_list(my_params,blogid,service_ident,expire_in_days=7):#use service_ident to search for service credentials in creds cache
     url = 'https://api.tumblr.com/v2/blog/{}.tumblr.com/posts'.format(blogid)
