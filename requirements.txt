@@ -1,0 +1,6 @@
+    Requirements for virtual environment running this code:
+    - download and import requests_oauthlib library 
+    - import webbrowser library
+    - import json library
+    - from datetime import date time
+    - download and import BeautifulSoup if you want to have more operations

@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 DEBUG = True
 CACHE_FNAME = "cache_contents.json"
+
 CREDS_CACHE_FILE = "creds.json"
 CREDS_FNAME = "creds_contents.json"
 
@@ -29,9 +30,9 @@ if not CLIENT_KEY or not CLIENT_SECRET:
 #--------------------------------
 # Load data cache, create CACHE_DICTION
 try:
-    with open (CACHE_FNAME,'r') as cache_file:
-        chache_json = cache_file.read()#read json file txt
-        CACHE_DICTION = json.loads(cache_json)#turn text into python object
+    f = open('cache_contents.json')
+    text = f.read()
+    CACHE_DICTION = json.loads(text)#turn text into python object
 except:
     CACHE_DICTION = {}# if failed in openning and reading file, diction is empty
 
@@ -56,7 +57,6 @@ def has_cache_expired(timestamp_str,expire_in_days):#check if cache timestamp is
         return False#used in get_from_cache
 
 def get_from_cache(identifier,dictionary):
-    identifier = identifier.upper()
     if identifier in dictionary:#dictionary of dictionary
         data_assoc_dict = dictionary[identifier]
         if has_cache_expired(data_assoc_dict['timestamp'],data_assoc_dict['expire_in_days']):
@@ -70,7 +70,7 @@ def get_from_cache(identifier,dictionary):
     else:
         data = None #Identifier not in dictionary
     return data #return data from dictionary['identifier']['values']
-
+print(get_from_cache('HTTPS://API.TUMBLR.COM/V2/BLOG/UXDESIGNRESOURCE.TUMBLR.COM/POSTS?LIMIT_20_OFFSET_3',CACHE_DICTION))
 def set_in_data_cache(identifier, data, expire_in_days):
     identifier = identifier.upper()
     CACHE_DICTION[identifier]={
@@ -84,13 +84,14 @@ def set_in_data_cache(identifier, data, expire_in_days):
 
 def set_in_creds_cache(identifier, data, expire_in_days):
     identifier = identifier.upper()
-    CACHE_DICTION[identifier]={
+    CREDS_DICTION[identifier]={
         'values':data,
         'timestamp':datetime.now().strftime(DATETIME_FORMAT),#strftime turns datetime object into strings
         'expire_in_days':expire_in_days
     }
     with open(CREDS_FNAME,'w') as cache_file:
         cache_json = json.dumps(CREDS_DICTION)#turn CACHE_DICTION into json file
+        print(CREDS_DICTION)
         cache_file.write(cache_json)
 
 ## ADDITIONAL CODE for program should go here...
@@ -129,8 +130,10 @@ def get_tokens_from_service(service_name_ident, expire_in_days=7): # Default: 7 
             print("Prepare to log in via browser.")
             print()
         creds_data = get_tokens()
+        # print(creds_data)#successfully get data
         set_in_creds_cache(service_name_ident, creds_data, expire_in_days=expire_in_days)
     return creds_data
+
 def create_request_identifier(url, params_diction):
     sorted_params = sorted(params_diction.items(),key=lambda x:x[0])
     params_str = "_".join([str(e) for l in sorted_params for e in l]) # Make the list of tuples into a flat list using a complex list comprehension
@@ -140,49 +143,50 @@ def create_request_identifier(url, params_diction):
 # 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = tokens
 
 # Save the credentials so that can use it again
-try:
-	f = open("cred.txt",'r')
-	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = json.loads(f.read())
-	f.close()
-except:
-	tokens = get_tokens()
-	f = open("cred.txt",'w')
-	f.write(json.dumps(tokens))
-	f.close()
-	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = tokens
+# try:
+# 	f = open("cred.txt",'r')
+# 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = json.loads(f.read())
+# 	f.close()
+# except:
+# 	tokens = get_tokens()
+# 	f = open("cred.txt",'w')
+# 	f.write(json.dumps(tokens))
+# 	f.close()
+# 	(client_key, client_secret, resource_owner_key, resource_owner_secret, verifier) = tokens
 #create an oauth object using the credentials
 
 
-def get_posts_list(my_params,blogid):
+def get_posts_list(my_params,blogid,service_ident,expire_in_days=7):#use service_ident to search for service credentials in creds cache
     url = 'https://api.tumblr.com/v2/blog/{}.tumblr.com/posts'.format(blogid)
-    # ident = create_request_identifier(url, my_params)
-    # data = get_from_cache(ident,CACHE_DICTION)
-    # if data:
-    #     if DEBUG:
-    #         print("Loading from data cache: {}... data".format(ident))
-    # else:
-    #     if DEBUG:
-    #         print("Fetching new data from {}".format(url))
-    #     # Get credentials
-    #     client_key, client_secret, resource_owner_key, resource_owner_secret, verifier = get_tokens_from_service(service_ident)
-    oauth = requests_oauthlib.OAuth1Session(client_key,
-    	client_secret = client_secret,
-    	resource_owner_key = resource_owner_key,
-    	resource_owner_secret = resource_owner_secret)
-
-    r = oauth.get(url,params = my_params)
-    resps_dict= r.json()
-    dict_list = []
-    for post in resps_dict['response']['posts']:
-        post_dict = {}
-        post_dict['title'] = post['slug']
-        post_dict['summary'] = post['summary']
-        post_dict['tags'] = post['tags']
-        post_dict['date'] = post['date']
-        post_dict['short_url'] = post['short_url']
-        dict_list.append(post_dict)
-    #set_in_data_cache(ident, dict_list, expire_in_days)
-    return dict_list
+    ident = create_request_identifier(url, my_params)
+    data = get_from_cache(ident,CACHE_DICTION)
+    print(bool(data))
+    if data:
+        if DEBUG:
+            print("Loading from data cache: {}... data".format(ident))
+    else:
+        if DEBUG:
+            print("Fetching new data from {}".format(url))
+        # Get credentials
+        client_key, client_secret, resource_owner_key, resource_owner_secret, verifier = get_tokens_from_service(service_ident)
+        oauth = requests_oauthlib.OAuth1Session(client_key,
+        	client_secret = client_secret,
+        	resource_owner_key = resource_owner_key,
+        	resource_owner_secret = resource_owner_secret)
+        r = oauth.get(url,params = my_params)
+        resps_dict= r.json()
+        dict_list = []
+        for post in resps_dict['response']['posts']:
+            post_dict = {}
+            post_dict['title'] = post['slug']
+            post_dict['summary'] = post['summary']
+            post_dict['tags'] = post['tags']
+            post_dict['date'] = post['date']
+            post_dict['short_url'] = post['short_url']
+            dict_list.append(post_dict)
+        data = dict_list
+        set_in_data_cache(ident, data, expire_in_days)
+    return data
 # ?? if I'm just fetching blogs posted by users, is there any need to use oauth anymore?
 
 def collect_posts(blogid):
@@ -190,7 +194,7 @@ def collect_posts(blogid):
     outfile.write("Title, Summary, Tags, Date, URL\n")
     for i in range(5):
         my_params = {'limit':20,'offset':i}
-        dict_list = get_posts_list(my_params,blogid)
+        dict_list = get_posts_list(my_params,blogid,"Tumblr")
         for dic in dict_list:
             outfile.write('"{}","{}","{}","{}","{}"\n'.format(dic['title'],dic['summary'],dic['tags'],dic['date'],dic['short_url']))
 # write_csv('alldesignprocess')
