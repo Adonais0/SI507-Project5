@@ -1,6 +1,4 @@
-    Requirements for virtual environment running this code:
-    - create a secret_data.py following secret_data_example.py
-	- fill the client_key and client_secret
+Requirements for virtual environment running this code:
     - download and import requests_oauthlib library 
     - import webbrowser library
     - import json library
