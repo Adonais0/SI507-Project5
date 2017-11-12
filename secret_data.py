@@ -1,2 +1,0 @@
-client_key = 'A5OIDJrQvLLZtpx1U6caXUqZjwgPVFn3wh6fIWW4kkPKUKcN3B'
-client_secret = 'IlhEh9qYXJhNpBnVeZOe0FgRljEhEX1vv7dH7GkkeJWzdCo16T'

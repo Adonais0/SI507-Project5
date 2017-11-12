@@ -1,4 +1,5 @@
     I am accessing the Tumblr API and gathering:
+    - I uploaded the secret_data.py, cred.txt, creds_contents.json, creds.json through canvas
     - 100(or less, depends on the amount of posts on the original blog) posts for each of 3 blogs I'm going to search for
     - For each post, I'll be accessing the title of the post, the summary of the post, the tags of the post, post date, and the short URL of the post
     - I'll write 3 CSV files, one for each blog’s posts 
